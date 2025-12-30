@@ -9,73 +9,13 @@ import { buildFeatureReport } from '../../features/report.js';
 import { summarizeMarket } from '../../llm/summarize.js';
 import { sortByNumber } from '../../utils/math.js';
 import { insertPayload, insertRun } from '../../store/repo.js';
+import { fetchBinanceCandles } from '../../data/binance.js';
 
 type SummaryRouteDeps = {
   db: Database;
 };
 
-const BINANCE_BASE_URL = 'https://api.binance.com/api/v3/klines';
 const MIN_CANDLES = 20;
-
-function toNumber(value: unknown, label: string): number {
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
-    throw new Error(`Invalid numeric value for ${label}.`);
-  }
-  return num;
-}
-
-function toOptionalNumber(value: unknown, label: string): number | undefined {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-  return toNumber(value, label);
-}
-
-function mapBinanceKlines(data: unknown): Candle[] {
-  if (!Array.isArray(data)) {
-    throw new Error('Unexpected Binance response payload.');
-  }
-
-  return data.map((kline, index) => {
-    if (!Array.isArray(kline) || kline.length < 11) {
-      throw new Error(`Invalid kline shape at index ${index}.`);
-    }
-    return {
-      t: toNumber(kline[0], 't'),
-      o: toNumber(kline[1], 'o'),
-      h: toNumber(kline[2], 'h'),
-      l: toNumber(kline[3], 'l'),
-      c: toNumber(kline[4], 'c'),
-      v: toNumber(kline[5], 'v'),
-      qv: toOptionalNumber(kline[7], 'qv'),
-      n: toOptionalNumber(kline[8], 'n'),
-      tbv: toOptionalNumber(kline[9], 'tbv'),
-      tqv: toOptionalNumber(kline[10], 'tqv'),
-    };
-  });
-}
-
-async function fetchBinanceCandles(params: {
-  symbol: string;
-  interval: string;
-  startTime: number;
-  endTime: number;
-}): Promise<Candle[]> {
-  const url = new URL(BINANCE_BASE_URL);
-  url.searchParams.set('symbol', params.symbol);
-  url.searchParams.set('interval', params.interval);
-  url.searchParams.set('startTime', String(params.startTime));
-  url.searchParams.set('endTime', String(params.endTime));
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Binance API error ${response.status}: ${text}`);
-  }
-  const payload = (await response.json()) as unknown;
-  return mapBinanceKlines(payload);
-}
 
 export function summaryRoutes(app: FastifyInstance, deps: SummaryRouteDeps): void {
   app.post('/v1/market/summary', async (request, reply) => {

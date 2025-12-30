@@ -53,7 +53,10 @@ export default function ChartPanel() {
     new Map(),
   );
 
-  const chartData = useMemo(() => mapCandles(candles), [candles]);
+  const chartData = useMemo(
+    () => mapCandles(candles).sort((a, b) => Number(a.time) - Number(b.time)),
+    [candles],
+  );
 
   const eventMarkers = useMemo(() => {
     if (!featureReport || typeof featureReport !== 'object') {
@@ -151,7 +154,7 @@ export default function ChartPanel() {
     }[];
 
     eventMapRef.current = nextMap;
-    return markers;
+    return markers.sort((a, b) => Number(a.time) - Number(b.time));
   }, [chartData, featureReport]);
 
   useEffect(() => {

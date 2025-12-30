@@ -24,8 +24,10 @@ const DEFAULT_BASE_URL = 'https://api.openai.com/v1/chat/completions';
 
 export function createOpenAiClient(options: OpenAiClientOptions = {}): LlmClient {
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
-  const model = options.model ?? process.env.LLM_MODEL ?? DEFAULT_MODEL;
+  const model = process.env.LLM_MODEL;
   const baseUrl = options.baseUrl ?? process.env.OPENAI_BASE_URL ?? DEFAULT_BASE_URL;
+
+  console.log(apiKey, model, baseUrl);
 
   return {
     async complete(prompt: string): Promise<string> {
@@ -143,6 +145,14 @@ function buildFallbackSummary(report: FeatureReport): LlmSummary {
   };
 }
 
+export function summarizeDeterministic(report: FeatureReport): SummaryResult {
+  const llmSummary = buildFallbackSummary(report);
+  return {
+    llmSummary,
+    text: llmSummary.text,
+  };
+}
+
 export async function summarizeMarket(
   report: FeatureReport,
   candlesTail: Candle[] = [],
@@ -156,8 +166,10 @@ export async function summarizeMarket(
 
   try {
     raw = await llmClient.complete(prompt);
+    console.log(raw);
     llmSummary = parseAndValidate(raw);
   } catch (error) {
+    console.log("manu", error)
     if (raw.trim().length > 0) {
       const details =
         error instanceof z.ZodError ? JSON.stringify(error.flatten()) : String(error);
