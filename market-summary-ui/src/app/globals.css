@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-fog text-ink antialiased;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at top left, rgba(10, 107, 117, 0.08), transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(242, 107, 79, 0.08), transparent 45%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(242, 244, 248, 0.9));
+}
+
+::selection {
+  background: rgba(10, 107, 117, 0.2);
+}
+
+.panel {
+  @apply rounded-2xl border border-slate/40 bg-white/70 backdrop-blur-md shadow-soft;
+}
+
+.panel-header {
+  @apply flex items-center justify-between border-b border-slate/30 px-5 py-4 text-sm uppercase tracking-[0.2em] text-steel;
+}
+
+.kicker {
+  @apply text-xs uppercase tracking-[0.35em] text-steel;
+}
+
+.stat-pill {
+  @apply flex items-center gap-2 rounded-full border border-slate/40 bg-white/70 px-3 py-1 text-xs font-medium text-steel;
+}
