@@ -203,30 +203,36 @@ export const llmSummarySchema = z
   .object({
     state: z
       .object({
-        auction: z.string().min(1),
-        confidence: zeroToOne,
+        auction: z
+          .string()
+          .min(1)
+          .describe('Single-phrase auction state (e.g., balance after failed initiative)'),
+        confidence: zeroToOne.describe('Acceptance strength, not directional conviction'),
       })
       .strict(),
     levels: z
       .object({
-        overheadSupply: z.array(zoneSchema),
-        support: z.array(zoneSchema),
+        overheadSupply: z.array(zoneSchema).default([]),
+        support: z.array(zoneSchema).default([]),
       })
-      .strict(),
-    events: z.array(
-      z
-        .object({
-          type: z.string().min(1),
-          t: z.number().int().nonnegative(),
-          severity: zeroToOne,
-        })
+      .partial()
+      .default({ overheadSupply: [], support: [] }),
+    events: z
+      .array(
+        z
+          .object({
+            type: z.string().min(1),
+            t: z.number().int().nonnegative(),
+            severity: zeroToOne,
+          })
         .strict(),
-    ),
+      )
+      .default([]),
     summary: z
       .object({
         one_liner: z.string().min(1),
-        details: z.array(z.string().min(1)),
-        invalidate_if: z.array(z.string().min(1)),
+        details: z.array(z.string().min(1)).default([]),
+        invalidate_if: z.array(z.string().min(1)).default([]),
       })
       .strict(),
     text: z.string().min(1),

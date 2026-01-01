@@ -10,9 +10,14 @@ export function buildPrompt(
   preferences?: MarketSummaryPreferences,
 ): string {
   const extrasMissing = report.qualityFlags.missingExtras;
-  const hasOnlyOhlcv = extrasMissing.length > 0;
+const hasOnlyOhlcv = extrasMissing.length > 0;
 
   const instructions = [
+    'You are writing a post-auction tape-reading memo.',
+    'This memo explains how the auction unfolded and why the market is behaving as it is now.',
+    'The memo itself is the primary output. Structured fields are secondary.',
+    'If the correct conclusion is uncertainty or balance, state that plainly.',
+    'Do not optimize for actionability. Optimize for correctness.',
     'You are a market analyst summarizing auction-style market structure from OHLCV data.',
     'You only see the last 15 candles for context; broader session stats come from the feature report.',
     'Tone: brutally direct, unfiltered, and challenging. No fluff, no validation.',
@@ -31,10 +36,11 @@ export function buildPrompt(
     'Use short, declarative lines. Include at least 8 lines.',
     'Call out failed initiative, acceptance, rejection, and balance explicitly when present.',
     'If only OHLCV is available, state exactly what cannot be known.',
-    '"state.confidence" reflects strength of acceptance, not directional conviction.',
+    'state.auction is a single phrase (e.g., "renegotiation with absorption", "initiative selling, acceptance pending", "balance after failed initiative").',
+    '"state.confidence" reflects strength of acceptance, not directional conviction. Balance/renegotiation should be low (0.2–0.4); clear acceptance high (0.7+).',
     'In balance or renegotiation, confidence must be low even if volatility was high.',
     'Levels must be derived from acceptance/rejection zones, not swing highs/lows.',
-    'If the market is balanced, levels should be wide ranges, not precise prices.',
+    'If the market is balanced, levels should be wide ranges, not precise prices. It is acceptable to leave levels empty when unresolved.',
     'When signals conflict, default to "renegotiation" as the auction state; do not resolve ambiguity unless acceptance is clear and sustained.',
     'Output JSON ONLY. Do not include markdown, code fences, or commentary.',
     'Never claim orderbook, delta, or trade-flow signals unless explicitly provided. If not provided, state uncertainty.',

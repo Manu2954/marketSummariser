@@ -17,7 +17,7 @@ type FeatureReport = Record<string, unknown> & {
 type LlmSummary = Record<string, unknown> & {
   state?: { auction?: string; confidence?: number };
   levels?: { overheadSupply?: number[][]; support?: number[][] };
-  summary?: { invalidate_if?: string[] };
+  summary?: { invalidate_if?: string[]; details?: string[]; one_liner?: string };
 };
 
 function copyToClipboard(value: string, onSuccess: () => void, onError: () => void) {
@@ -47,6 +47,12 @@ export default function SummaryPanel() {
   }, [typedFeature]);
 
   const structuredDetails = useMemo(() => {
+    const overhead = Array.isArray(typedSummary?.levels?.overheadSupply)
+      ? typedSummary?.levels?.overheadSupply
+      : [];
+    const support = Array.isArray(typedSummary?.levels?.support)
+      ? typedSummary?.levels?.support
+      : [];
     return {
       auction: typedSummary?.state?.auction ?? 'n/a',
       confidence:
@@ -54,10 +60,12 @@ export default function SummaryPanel() {
           ? typedSummary?.state?.confidence?.toFixed(2)
           : 'n/a',
       levels: {
-        overheadSupply: typedSummary?.levels?.overheadSupply ?? [],
-        support: typedSummary?.levels?.support ?? [],
+        overheadSupply: overhead,
+        support,
       },
       invalidation: typedSummary?.summary?.invalidate_if ?? [],
+      details: typedSummary?.summary?.details ?? [],
+      oneLiner: typedSummary?.summary?.one_liner ?? '',
     };
   }, [typedSummary]);
 
@@ -147,7 +155,7 @@ export default function SummaryPanel() {
               <span className="stat-pill">Symbol {metaChips.symbol}</span>
               <span className="stat-pill">Timeframe {metaChips.timeframe}</span>
               <span className="stat-pill">Regime {metaChips.regime}</span>
-              <span className="stat-pill">Confidence {metaChips.confidenceText}</span>
+              <span className="stat-pill">Acceptance {metaChips.confidenceText}</span>
             </div>
             <div className="rounded-2xl border border-slate/40 bg-white/70 p-5 text-sm leading-relaxed text-ink">
               {text || 'Run a summary to populate insights.'}
@@ -164,7 +172,7 @@ export default function SummaryPanel() {
                   <span className="font-semibold">Auction</span>: {structuredDetails.auction}
                 </div>
                 <div>
-                  <span className="font-semibold">Confidence</span>:{' '}
+                  <span className="font-semibold">Acceptance</span>:{' '}
                   {structuredDetails.confidence}
                 </div>
                 <div>
@@ -181,6 +189,17 @@ export default function SummaryPanel() {
                     ? structuredDetails.invalidation.join(' | ')
                     : 'n/a'}
                 </div>
+                <div>
+                  <span className="font-semibold">Details</span>:{' '}
+                  {structuredDetails.details.length
+                    ? structuredDetails.details.join(' | ')
+                    : 'n/a'}
+                </div>
+                {structuredDetails.oneLiner ? (
+                  <div>
+                    <span className="font-semibold">One-liner</span>: {structuredDetails.oneLiner}
+                  </div>
+                ) : null}
               </div>
             </div>
             <JsonViewer data={llmSummary} empty="No LLM output yet." />

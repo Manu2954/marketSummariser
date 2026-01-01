@@ -19,7 +19,7 @@ type OpenAiClientOptions = {
   baseUrl?: string;
 };
 
-const DEFAULT_MODEL = 'gpt-4o-mini';
+// const DEFAULT_MODEL = 'gpt-4o-mini';
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1/chat/completions';
 
 export function createOpenAiClient(options: OpenAiClientOptions = {}): LlmClient {
@@ -165,6 +165,7 @@ export async function summarizeMarket(
   let raw = '';
 
   try {
+    console.log(prompt);
     raw = await llmClient.complete(prompt);
     console.log(raw);
     llmSummary = parseAndValidate(raw);
