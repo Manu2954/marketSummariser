@@ -27,8 +27,6 @@ export function createOpenAiClient(options: OpenAiClientOptions = {}): LlmClient
   const model = process.env.LLM_MODEL;
   const baseUrl = options.baseUrl ?? process.env.OPENAI_BASE_URL ?? DEFAULT_BASE_URL;
 
-  console.log(apiKey, model, baseUrl);
-
   return {
     async complete(prompt: string): Promise<string> {
       if (!apiKey) {
@@ -165,9 +163,7 @@ export async function summarizeMarket(
   let raw = '';
 
   try {
-    console.log(prompt);
     raw = await llmClient.complete(prompt);
-    console.log(raw);
     llmSummary = parseAndValidate(raw);
   } catch (error) {
     console.log("manu", error)

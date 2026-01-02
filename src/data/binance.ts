@@ -1,7 +1,10 @@
-import type { Candle } from '../domain/types.js';
+import type { Candle, TakerLongShortRatio } from '../domain/types.js';
 
-const BINANCE_BASE_URL = 'https://api.binance.com/api/v3/klines';
+const BINANCE_BASE_URL = 'https://fapi.binance.com/fapi/v1/klines';
+const BINANCE_FUTURES_TAKER_URL =
+  'https://fapi.binance.com/futures/data/takerlongshortRatio';
 const MAX_LIMIT = 1000; // Binance max per request
+const MAX_TAKER_LIMIT = 1000; // Binance max per request for taker ratios
 
 function toNumber(value: unknown, label: string): number {
   const num = Number(value);
@@ -61,6 +64,52 @@ function parseIntervalMs(interval: string): number | null {
     return null;
   }
   return value * mult;
+}
+
+export async function fetchBinanceTakerLongShortRatios(params: {
+  symbol: string;
+  period: string;
+  startTime: number;
+  endTime: number;
+}): Promise<TakerLongShortRatio[]> {
+  const url = new URL(BINANCE_FUTURES_TAKER_URL);
+  url.searchParams.set('symbol', params.symbol);
+  url.searchParams.set('period', params.period);
+  url.searchParams.set('startTime', String(params.startTime));
+  url.searchParams.set('endTime', String(params.endTime));
+  url.searchParams.set('limit', String(MAX_TAKER_LIMIT));
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Binance taker ratio API error ${response.status}: ${text}`);
+  }
+
+  const payload = (await response.json()) as unknown;
+  if (!Array.isArray(payload)) {
+    throw new Error('Unexpected Binance taker ratio payload.');
+  }
+
+  return payload.map((item, index) => {
+    if (
+      typeof item !== 'object' ||
+      item === null ||
+      !('timestamp' in item) ||
+      !('buySellRatio' in item) ||
+      !('buyVol' in item) ||
+      !('sellVol' in item)
+    ) {
+      throw new Error(`Invalid taker ratio item at index ${index}.`);
+    }
+
+    const record = item as Record<string, unknown>;
+    return {
+      timestamp: toNumber(record.timestamp, 'timestamp'),
+      buySellRatio: toNumber(record.buySellRatio, 'buySellRatio'),
+      buyVol: toNumber(record.buyVol, 'buyVol'),
+      sellVol: toNumber(record.sellVol, 'sellVol'),
+    };
+  });
 }
 
 export async function fetchBinanceCandles(params: {

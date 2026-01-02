@@ -71,3 +71,10 @@ export type MarketSummaryResponse = {
   text: string;
   candles: Candle[];
 };
+
+export type TakerLongShortRatio = {
+  timestamp: number;
+  buySellRatio: number;
+  buyVol: number;
+  sellVol: number;
+};
