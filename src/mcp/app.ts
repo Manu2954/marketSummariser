@@ -4,10 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import {
-  fetchBinanceCandles,
-  fetchBinanceTakerLongShortRatios,
-} from '../data/binance.js';
+import { fetchBinanceCandles } from '../data/binance.js';
 import { buildFeatureReport } from '../features/report.js';
 
 const MIN_CANDLES = 20;
@@ -59,7 +56,7 @@ const sharedInputSchema = {
 const toolDefinitionReport = {
   name: 'market_feature_report',
   description:
-    'Fetches OHLCV candles (Binance futures) and returns a FeatureReport plus futures taker long/short ratios. Let the calling model summarize or answer follow-up questions.',
+    'Fetches OHLCV candles (Binance futures) and returns a FeatureReport. Let the calling model summarize or answer follow-up questions.',
   inputSchema: sharedInputSchema,
 };
 
@@ -147,7 +144,7 @@ Do not offer reassurance.`;
 const toolDefinitionTapeRead = {
   name: 'market_tape_read',
   description:
-    'Fetches OHLCV candles and futures taker long/short ratios, returning raw data with strict tape-reading instructions for the calling model to summarize.',
+    'Fetches OHLCV candles and returns raw candle data with strict tape-reading instructions for the calling model to summarize.',
   inputSchema: sharedInputSchema,
 };
 
@@ -232,35 +229,17 @@ export function createMcpServer(): Server {
       endTime,
     });
 
-    let takerLongShortRatios: Awaited<ReturnType<typeof fetchBinanceTakerLongShortRatios>> = [];
-    let takerLongShortRatiosError: string | undefined;
-    try {
-      takerLongShortRatios = await fetchBinanceTakerLongShortRatios({
-        symbol: data.symbol,
-        period: data.interval,
-        startTime: data.startTime,
-        endTime,
-      });
-    } catch (error) {
-      takerLongShortRatiosError =
-        error instanceof Error ? error.message : String(error);
-      console.error(
-        'Failed to fetch taker long/short ratios:',
-        takerLongShortRatiosError,
-      );
-    }
-
     if (candles.length < MIN_CANDLES) {
       return {
-          content: [
-            {
-              type: 'text',
-              text: `Insufficient data: expected at least ${MIN_CANDLES} candles, got ${candles.length}.`,
-            },
-          ],
-          isError: true,
-        };
-      }
+        content: [
+          {
+            type: 'text',
+            text: `Insufficient data: expected at least ${MIN_CANDLES} candles, got ${candles.length}.`,
+          },
+        ],
+        isError: true,
+      };
+    }
 
     if (isReportTool) {
       const report = buildFeatureReport({
@@ -277,8 +256,6 @@ export function createMcpServer(): Server {
           startTime: data.startTime,
           endTime,
         },
-        takerLongShortRatios,
-        takerLongShortRatiosError,
       };
 
       return {
@@ -294,8 +271,6 @@ export function createMcpServer(): Server {
     const tapeReadPayload = {
       instructions: TAPE_READ_INSTRUCTIONS,
       candles,
-      takerLongShortRatios,
-      takerLongShortRatiosError,
       request: {
         exchange: data.exchange,
         symbol: data.symbol,
@@ -304,7 +279,7 @@ export function createMcpServer(): Server {
         endTime,
       },
       note:
-        'Use the instructions to produce the structured tape-reading answer from raw OHLCV data and futures taker long/short ratios. Do not add indicators, predictions, or signals.',
+        'Use the instructions to produce the structured tape-reading answer from raw OHLCV data. Do not add indicators, predictions, or signals.',
     };
 
     return {
@@ -326,7 +301,7 @@ export function createMcpServer(): Server {
       isError: true,
     };
   }
-});
+  });
 
   return server;
 }
