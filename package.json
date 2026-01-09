@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "percentile": "tsx src/features/percentile.ts"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",

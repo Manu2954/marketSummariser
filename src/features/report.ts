@@ -6,6 +6,7 @@ import { computeOhlcvStats, computeSeriesDerived } from './ohlcv.js';
 import { computeVolumeStats, volumePercentile } from './volume.js';
 import { clamp, mean, safeDiv, sortByNumber } from '../utils/math.js';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const extraKeys = ['n', 'tbv', 'tqv', 'qv'] as const;
 
 type ExtraKey = (typeof extraKeys)[number];
